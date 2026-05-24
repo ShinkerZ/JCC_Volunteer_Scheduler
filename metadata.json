@@ -1,0 +1,6 @@
+{
+  "name": "Volunteer Shift Scheduler",
+  "description": "An administrative portal and Volunteer Shift Scheduler for HKT Shabbat Shifts. Supports dynamic candle-lighting times, role-based shift assignments, real-time Firestore emulator modeling, .ics calendar invitations, and FCM push notifications.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
