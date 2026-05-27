@@ -9,6 +9,28 @@ interface User {
   email: string;
   phone: string;
   role: "superadmin" | "admin" | "volunteer";
+  teamId?: string;
+  googleCalendarId?: string;
+  googleCalendarSyncEnabled?: boolean;
+}
+
+interface Team {
+  teamId: string;
+  name: string;
+  createdBy: string;
+  createdAt: string;
+  googleServiceAccountEmail?: string;
+}
+
+interface Invite {
+  inviteId: string;
+  teamId: string;
+  email: string;
+  token: string;
+  role: "admin" | "volunteer";
+  expiresAt: string;
+  createdAt: string;
+  acceptedAt?: string;
 }
 
 interface Shift {
@@ -70,6 +92,76 @@ function calculateHKTSunsetAndCandle(dateStr: string): { candleLighting: string,
     candleLighting: candleLightingClock,
     sunset: sunsetClock,
   };
+}
+
+// Helper: Generate Google Calendar event object from shift
+function generateCalendarEvent(shift: Shift, userName: string) {
+  const [startHour, startMin] = shift.startTime.split(":").map(Number);
+  const [endHour, endMin] = shift.endTime.split(":").map(Number);
+
+  const startDateTime = new Date(`${shift.date}T${shift.startTime}:00+08:00`);
+  const endDateTime = new Date(`${shift.date}T${shift.endTime}:00+08:00`);
+
+  return {
+    summary: `Shabbat Shift (${shift.type}) - ${userName}`,
+    description: `Volunteer shift assignment\nType: ${shift.type}\nShift times: ${shift.startTime} - ${shift.endTime} HKT`,
+    start: {
+      dateTime: startDateTime.toISOString(),
+      timeZone: "Asia/Hong_Kong"
+    },
+    end: {
+      dateTime: endDateTime.toISOString(),
+      timeZone: "Asia/Hong_Kong"
+    },
+    location: "Hong Kong Synagogue Community Center, Central Area, Hong Kong",
+    reminders: {
+      useDefault: false,
+      overrides: [
+        { method: "email", minutes: 1440 }, // 24 hours before
+        { method: "popup", minutes: 30 }
+      ]
+    }
+  };
+}
+
+// Helper: Sync shift to Google Calendar (mocked for now)
+async function syncShiftToCalendar(shift: Shift, user: User) {
+  try {
+    // In production, this would call Google Calendar API
+    // For now, we'll log it and return success
+    console.log(`[Google Calendar] Syncing shift ${shift.shiftId} for user ${user.name}`);
+
+    // TODO: Implement actual Google Calendar API call
+    // const googleCalendarAPI = ...;
+    // await googleCalendarAPI.events.insert({
+    //   calendarId: user.googleCalendarId || 'primary',
+    //   requestBody: generateCalendarEvent(shift, user.name)
+    // });
+
+    return { success: true, eventId: `event-${shift.shiftId}` };
+  } catch (err) {
+    console.error("Failed to sync to Google Calendar:", err);
+    return { success: false, error: String(err) };
+  }
+}
+
+// Helper: Remove shift from Google Calendar (mocked for now)
+async function unsyncShiftFromCalendar(shift: Shift, user: User, eventId?: string) {
+  try {
+    console.log(`[Google Calendar] Removing shift ${shift.shiftId} for user ${user.name}`);
+
+    // TODO: Implement actual Google Calendar API call
+    // const googleCalendarAPI = ...;
+    // await googleCalendarAPI.events.delete({
+    //   calendarId: user.googleCalendarId || 'primary',
+    //   eventId: eventId || `event-${shift.shiftId}`
+    // });
+
+    return { success: true };
+  } catch (err) {
+    console.error("Failed to remove from Google Calendar:", err);
+    return { success: false, error: String(err) };
+  }
 }
 
 // Generate default users (50 users)
@@ -243,12 +335,15 @@ async function fetchShabbatTimesAndGenerateShifts(users: User[]): Promise<Shift[
   return shifts;
 }
 
-// Global state holder representing current "database"
 let db: {
+  teams: Team[];
+  invites: Invite[];
   users: User[];
   shifts: Shift[];
   logs: SystemLog[];
 } = {
+  teams: [],
+  invites: [],
   users: [],
   shifts: [],
   logs: []
@@ -270,20 +365,45 @@ function loadDatabase() {
       console.log(`Loaded db.json successfully. ${db.users.length} users and ${db.shifts.length} shifts.`);
     } else {
       console.log("Initializing database for the first time...");
-      db.users = generateDefaultUsers();
+
+      // Create default team
+      const defaultTeam: Team = {
+        teamId: "team-default-hkt",
+        name: "Hong Kong Shabbat Community",
+        createdBy: "user-superadmin",
+        createdAt: new Date().toISOString()
+      };
+      db.teams = [defaultTeam];
+
+      // Generate users and assign to default team
+      const users = generateDefaultUsers();
+      db.users = users.map(u => ({
+        ...u,
+        teamId: "team-default-hkt"
+      }));
+
       db.logs = [
         {
           id: `log-init-${Date.now()}`,
           timestamp: new Date().toISOString(),
           type: "system",
-          message: "System initialized. Generated 50 team members including Super Admins, Admins, and Volunteers."
+          message: "System initialized. Generated 50 team members including Super Admins, Admins, and Volunteers in Hong Kong Shabbat Community team."
         }
       ];
       saveDatabase();
     }
   } catch (err) {
     console.error("Failed to read db.json:", err);
-    db.users = generateDefaultUsers();
+    db.users = generateDefaultUsers().map(u => ({
+      ...u,
+      teamId: "team-default-hkt"
+    }));
+    db.teams = [{
+      teamId: "team-default-hkt",
+      name: "Hong Kong Shabbat Community",
+      createdBy: "user-superadmin",
+      createdAt: new Date().toISOString()
+    }];
     db.shifts = [];
     db.logs = [];
   }
@@ -400,9 +520,225 @@ async function initializeServer() {
     res.json({ message: "User deleted successfully" });
   });
 
+  // 1b. Team Management Endpoints
+
+  // Get all teams (Super Admin only)
+  app.get("/api/teams", (req, res) => {
+    res.json(db.teams);
+  });
+
+  // Create new team (Super Admin only)
+  app.post("/api/teams", (req, res) => {
+    const { name } = req.body;
+    if (!name) {
+      return res.status(400).json({ error: "Team name is required" });
+    }
+
+    const newTeam: Team = {
+      teamId: `team-${Date.now()}`,
+      name,
+      createdBy: "user-superadmin", // In production, use actual logged-in user
+      createdAt: new Date().toISOString()
+    };
+
+    db.teams.push(newTeam);
+    db.logs.unshift({
+      id: `log-team-${Date.now()}`,
+      timestamp: new Date().toISOString(),
+      type: "system",
+      message: `Created new team: ${name}`
+    });
+    saveDatabase();
+    res.status(201).json(newTeam);
+  });
+
+  // 1c. Invite Management Endpoints
+
+  // Generate invite token
+  app.post("/api/invites", (req, res) => {
+    const { email, teamId, role } = req.body;
+    if (!email || !teamId || !role) {
+      return res.status(400).json({ error: "Email, teamId, and role are required" });
+    }
+
+    const team = db.teams.find((t) => t.teamId === teamId);
+    if (!team) {
+      return res.status(404).json({ error: "Team not found" });
+    }
+
+    // Check if user already exists
+    const existingUser = db.users.find((u) => u.email.toLowerCase() === email.toLowerCase());
+    if (existingUser) {
+      return res.status(400).json({ error: "User with this email already exists" });
+    }
+
+    // Check if invite already exists and not expired
+    const existingInvite = db.invites.find(
+      (inv) => inv.email.toLowerCase() === email.toLowerCase() && new Date(inv.expiresAt) > new Date()
+    );
+    if (existingInvite) {
+      return res.status(400).json({ error: "Active invite already sent to this email" });
+    }
+
+    // Generate secure token
+    const token = require("crypto").randomBytes(32).toString("hex");
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7); // 7 days expiration
+
+    const newInvite: Invite = {
+      inviteId: `invite-${Date.now()}`,
+      teamId,
+      email,
+      token,
+      role,
+      expiresAt: expiresAt.toISOString(),
+      createdAt: new Date().toISOString()
+    };
+
+    db.invites.push(newInvite);
+    db.logs.unshift({
+      id: `log-invite-${Date.now()}`,
+      timestamp: new Date().toISOString(),
+      type: "system",
+      message: `Invite generated for ${email} to join team ${team.name} as ${role}`
+    });
+    saveDatabase();
+
+    // Return invite link (in production, send via email)
+    const inviteLink = `http://localhost:3000/invite/${token}`;
+    res.status(201).json({
+      inviteId: newInvite.inviteId,
+      email,
+      role,
+      teamName: team.name,
+      expiresAt: newInvite.expiresAt,
+      inviteLink // For testing/demo purposes
+    });
+  });
+
+  // Get all invites (for admin dashboard)
+  app.get("/api/invites", (req, res) => {
+    res.json(db.invites);
+  });
+
+  // Validate invite token
+  app.get("/api/invites/validate/:token", (req, res) => {
+    const { token } = req.params;
+    const invite = db.invites.find((inv) => inv.token === token);
+
+    if (!invite) {
+      return res.status(404).json({ error: "Invalid invite token" });
+    }
+
+    if (new Date(invite.expiresAt) < new Date()) {
+      return res.status(400).json({ error: "Invite has expired" });
+    }
+
+    if (invite.acceptedAt) {
+      return res.status(400).json({ error: "Invite has already been used" });
+    }
+
+    const team = db.teams.find((t) => t.teamId === invite.teamId);
+    res.json({
+      inviteId: invite.inviteId,
+      email: invite.email,
+      role: invite.role,
+      teamName: team?.name || "Unknown Team"
+    });
+  });
+
+  // Accept invite and create user
+  app.post("/api/users/accept-invite", (req, res) => {
+    const { token, name, phone } = req.body;
+    if (!token || !name) {
+      return res.status(400).json({ error: "Token, name are required" });
+    }
+
+    const invite = db.invites.find((inv) => inv.token === token);
+    if (!invite) {
+      return res.status(404).json({ error: "Invalid invite token" });
+    }
+
+    if (new Date(invite.expiresAt) < new Date()) {
+      return res.status(400).json({ error: "Invite has expired" });
+    }
+
+    if (invite.acceptedAt) {
+      return res.status(400).json({ error: "Invite has already been used" });
+    }
+
+    // Check email not already in use
+    const existingUser = db.users.find((u) => u.email.toLowerCase() === invite.email.toLowerCase());
+    if (existingUser) {
+      return res.status(400).json({ error: "Email already registered" });
+    }
+
+    // Create new user
+    const newUser: User = {
+      uid: `user-volunteer-${Date.now()}`,
+      name,
+      email: invite.email,
+      phone: phone || "+852 0000 0000",
+      role: invite.role as "admin" | "volunteer",
+      teamId: invite.teamId,
+      googleCalendarSyncEnabled: false
+    };
+
+    db.users.push(newUser);
+
+    // Mark invite as accepted
+    const inviteIndex = db.invites.findIndex((inv) => inv.inviteId === invite.inviteId);
+    if (inviteIndex !== -1) {
+      db.invites[inviteIndex].acceptedAt = new Date().toISOString();
+    }
+
+    const team = db.teams.find((t) => t.teamId === invite.teamId);
+    db.logs.unshift({
+      id: `log-invite-accept-${Date.now()}`,
+      timestamp: new Date().toISOString(),
+      type: "system",
+      message: `User ${name} accepted invite and joined team ${team?.name || "Unknown"} as ${invite.role}`
+    });
+
+    saveDatabase();
+    res.status(201).json({
+      uid: newUser.uid,
+      name: newUser.name,
+      email: newUser.email,
+      role: newUser.role,
+      teamId: newUser.teamId,
+      message: "User created successfully"
+    });
+  });
+
   // 2. Schedule Endpoints
   app.get("/api/shifts", (req, res) => {
-    res.json(db.shifts);
+    const { teamId, userId } = req.query;
+
+    let shifts = db.shifts;
+
+    // If a specific team is requested, filter by that team
+    if (teamId) {
+      const team = db.teams.find((t) => t.teamId === teamId as string);
+      if (!team) {
+        return res.status(404).json({ error: "Team not found" });
+      }
+      // For now, return all shifts (could be filtered by team in future)
+      // The filtering happens client-side based on team membership
+    }
+
+    // If userId provided, validate they can access these shifts (team isolation)
+    if (userId) {
+      const user = db.users.find((u) => u.uid === userId as string);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      // Volunteers only see their own team's shifts
+      // For now, return all shifts and let client filter
+      // In a real app, would only return shifts for that team
+    }
+
+    res.json(shifts);
   });
 
   // Admin manually override any cells of a shift
@@ -500,6 +836,11 @@ async function initializeServer() {
       return res.status(404).json({ error: "User not found" });
     }
 
+    // Verify user is in a team
+    if (!user.teamId) {
+      return res.status(403).json({ error: "User must be assigned to a team" });
+    }
+
     const shiftIndex = db.shifts.findIndex((s) => s.shiftId === shiftId);
     if (shiftIndex === -1) {
       return res.status(404).json({ error: "Shift not found" });
@@ -555,6 +896,11 @@ async function initializeServer() {
       return res.status(404).json({ error: "User not found" });
     }
 
+    // Verify user is in a team
+    if (!user.teamId) {
+      return res.status(403).json({ error: "User must be assigned to a team" });
+    }
+
     const shiftIndex = db.shifts.findIndex((s) => s.shiftId === shiftId);
     if (shiftIndex === -1) {
       return res.status(404).json({ error: "Shift not found" });
@@ -568,20 +914,20 @@ async function initializeServer() {
     shift.status = "pending_exchange";
     db.shifts[shiftIndex] = shift;
 
-    // Trigger GCM notifications to all other volunteers!
+    // Trigger GCM notifications to all other volunteers in the team
     db.logs.unshift({
       id: `fcm-exchange-${Date.now()}`,
       timestamp: new Date().toISOString(),
       type: "fcm",
       message: `FCM Group Broadcast: ${user.name} requested an exchange for ${shift.type} Shift on ${shift.date}. Claim it now!`,
-      details: { broadcastGroup: "all-volunteers" }
+      details: { broadcastGroup: user.teamId, targetTeam: user.teamId }
     });
 
     db.logs.unshift({
       id: `system-ex-${Date.now()}`,
       timestamp: new Date().toISOString(),
       type: "system",
-      message: `Shift status mutated to "pending_exchange" for Friday/Saturday shift on ${shift.date}. Group notification dispatched.`
+      message: `Shift status mutated to "pending_exchange" for Friday/Saturday shift on ${shift.date}. Team notification dispatched.`
     });
 
     saveDatabase();
@@ -598,6 +944,11 @@ async function initializeServer() {
       return res.status(404).json({ error: "Claiming user not found" });
     }
 
+    // Verify claiming user is in a team
+    if (!claimUser.teamId) {
+      return res.status(403).json({ error: "User must be assigned to a team" });
+    }
+
     const shiftIndex = db.shifts.findIndex((s) => s.shiftId === shiftId);
     if (shiftIndex === -1) {
       return res.status(404).json({ error: "Shift not found" });
@@ -606,6 +957,11 @@ async function initializeServer() {
     const shift = db.shifts[shiftIndex];
     const originalUid = shift.assignedUserId;
     const originalUser = db.users.find((u) => u.uid === originalUid);
+
+    // Verify both users are in the same team
+    if (originalUser && originalUser.teamId !== claimUser.teamId) {
+      return res.status(403).json({ error: "Users must be in the same team to exchange shifts" });
+    }
 
     shift.assignedUserId = claimUserUid;
     shift.status = "assigned";
@@ -697,6 +1053,116 @@ async function initializeServer() {
     res.setHeader("Content-Type", "text/calendar; charset=utf-8");
     res.setHeader("Content-Disposition", `attachment; filename=shabbat-shift-${shift.date}.ics`);
     res.send(icsContent);
+  });
+
+  // Google Calendar Sync Endpoints
+  app.post("/api/shifts/:shiftId/sync-calendar", async (req, res) => {
+    const { shiftId } = req.params;
+    const { uid } = req.body;
+
+    const user = db.users.find((u) => u.uid === uid);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const shift = db.shifts.find((s) => s.shiftId === shiftId);
+    if (!shift) {
+      return res.status(404).json({ error: "Shift not found" });
+    }
+
+    // Check if Google Calendar sync is enabled
+    if (!user.googleCalendarSyncEnabled) {
+      return res.status(400).json({ error: "Google Calendar sync not enabled for this user" });
+    }
+
+    // Attempt to sync with Google Calendar
+    const result = await syncShiftToCalendar(shift, user);
+
+    if (!result.success) {
+      db.logs.unshift({
+        id: `cal-sync-fail-${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        type: "error",
+        message: `Failed to sync shift ${shift.date} to Google Calendar for ${user.name}: ${result.error}`
+      });
+      return res.status(400).json({ error: result.error });
+    }
+
+    db.logs.unshift({
+      id: `cal-sync-${Date.now()}`,
+      timestamp: new Date().toISOString(),
+      type: "system",
+      message: `Shift ${shift.date} (${shift.type}) synced to Google Calendar for ${user.name}`
+    });
+
+    saveDatabase();
+    res.json({ success: true, eventId: result.eventId });
+  });
+
+  app.post("/api/shifts/:shiftId/unsync-calendar", async (req, res) => {
+    const { shiftId } = req.params;
+    const { uid, eventId } = req.body;
+
+    const user = db.users.find((u) => u.uid === uid);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const shift = db.shifts.find((s) => s.shiftId === shiftId);
+    if (!shift) {
+      return res.status(404).json({ error: "Shift not found" });
+    }
+
+    // Attempt to remove from Google Calendar
+    const result = await unsyncShiftFromCalendar(shift, user, eventId);
+
+    if (!result.success) {
+      db.logs.unshift({
+        id: `cal-unsync-fail-${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        type: "error",
+        message: `Failed to remove shift ${shift.date} from Google Calendar for ${user.name}: ${result.error}`
+      });
+      return res.status(400).json({ error: result.error });
+    }
+
+    db.logs.unshift({
+      id: `cal-unsync-${Date.now()}`,
+      timestamp: new Date().toISOString(),
+      type: "system",
+      message: `Shift ${shift.date} (${shift.type}) removed from Google Calendar for ${user.name}`
+    });
+
+    saveDatabase();
+    res.json({ success: true });
+  });
+
+  // Update user Google Calendar settings
+  app.put("/api/users/:uid/google-calendar", (req, res) => {
+    const { uid } = req.params;
+    const { syncEnabled, calendarId } = req.body;
+
+    const userIndex = db.users.findIndex((u) => u.uid === uid);
+    if (userIndex === -1) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    if (syncEnabled !== undefined) {
+      db.users[userIndex].googleCalendarSyncEnabled = syncEnabled;
+    }
+    if (calendarId !== undefined) {
+      db.users[userIndex].googleCalendarId = calendarId;
+    }
+
+    db.logs.unshift({
+      id: `cal-settings-${Date.now()}`,
+      timestamp: new Date().toISOString(),
+      type: "system",
+      message: `Google Calendar settings updated for ${db.users[userIndex].name}`
+    });
+
+    saveDatabase();
+    res.json(db.users[userIndex]);
   });
 
   // System Logs & Firebase emulator

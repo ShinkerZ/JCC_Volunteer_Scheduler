@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { 
-  Users, 
-  Calendar, 
-  Clock, 
-  Activity, 
-  AlertCircle, 
-  Bell, 
-  Mail, 
-  RefreshCcw, 
-  ShieldAlert, 
-  Smartphone, 
+import {
+  Users,
+  Calendar,
+  Clock,
+  Activity,
+  AlertCircle,
+  Bell,
+  Mail,
+  RefreshCcw,
+  ShieldAlert,
+  Smartphone,
   Database,
   Grid,
   Sparkles,
@@ -21,6 +21,7 @@ import {
   ListFilter
 } from "lucide-react";
 import GoogleSheetView from "./components/GoogleSheetView";
+import VolunteerDashboard from "./components/VolunteerDashboard";
 import { User, Shift, SystemLog } from "./types";
 
 export default function App() {
@@ -29,7 +30,14 @@ export default function App() {
   const [logs, setLogs] = useState<SystemLog[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"sheet" | "directory" | "logs">("sheet");
+  const [activeTab, setActiveTab] = useState<"sheet" | "directory" | "logs" | "my-shifts">("sheet");
+
+  // State for invite acceptance
+  const [inviteToken, setInviteToken] = useState<string | null>(null);
+  const [inviteData, setInviteData] = useState<any | null>(null);
+  const [inviteFormData, setInviteFormData] = useState({ name: "", phone: "" });
+  const [inviteProcessing, setInviteProcessing] = useState(false);
+  const [inviteMessage, setInviteMessage] = useState("");
 
   // State for adding new user
   const [newUserName, setNewUserName] = useState("");
@@ -38,6 +46,20 @@ export default function App() {
   const [newUserRole, setNewUserRole] = useState<"admin" | "volunteer">("volunteer");
   const [userSuccessMessage, setUserSuccessMessage] = useState("");
   const [userErrorMessage, setUserErrorMessage] = useState("");
+
+  // State for team management
+  const [teams, setTeams] = useState<any[]>([]);
+  const [invites, setInvites] = useState<any[]>([]);
+  const [newTeamName, setNewTeamName] = useState("");
+  const [teamSuccessMessage, setTeamSuccessMessage] = useState("");
+  const [teamErrorMessage, setTeamErrorMessage] = useState("");
+
+  // State for sending invites
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteTeamId, setInviteTeamId] = useState("");
+  const [inviteRole, setInviteRole] = useState<"admin" | "volunteer">("volunteer");
+  const [inviteSuccessMessage, setInviteSuccessMessage] = useState("");
+  const [inviteErrorMessage, setInviteErrorMessage] = useState("");
 
   // Statistics calculation
   const stats = {
@@ -50,20 +72,26 @@ export default function App() {
   // Synchronize state from server
   const fetchData = async () => {
     try {
-      const [usersRes, shiftsRes, logsRes] = await Promise.all([
+      const [usersRes, shiftsRes, logsRes, teamsRes, invitesRes] = await Promise.all([
         fetch("/api/users"),
         fetch("/api/shifts"),
-        fetch("/api/system-logs")
+        fetch("/api/system-logs"),
+        fetch("/api/teams"),
+        fetch("/api/invites")
       ]);
 
       if (usersRes.ok && shiftsRes.ok && logsRes.ok) {
         const usersData = await usersRes.json();
         const shiftsData = await shiftsRes.json();
         const logsData = await logsRes.json();
+        const teamsData = teamsRes.ok ? await teamsRes.json() : [];
+        const invitesData = invitesRes.ok ? await invitesRes.json() : [];
 
         setUsers(usersData);
         setShifts(shiftsData);
         setLogs(logsData);
+        setTeams(teamsData);
+        setInvites(invitesData);
 
         // Auto select first user (Super Admin) if not selected
         if (!currentUser && usersData.length > 0) {
@@ -75,6 +103,11 @@ export default function App() {
           if (updatedUser) {
             setCurrentUser(updatedUser);
           }
+        }
+
+        // Set default team for invites
+        if (teamsData.length > 0 && !inviteTeamId) {
+          setInviteTeamId(teamsData[0].teamId);
         }
       }
     } catch (err) {
@@ -91,11 +124,40 @@ export default function App() {
     return () => clearInterval(interval);
   }, [currentUser]);
 
+  // Check for invite token in URL on mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("invite");
+    if (token) {
+      setInviteToken(token);
+      // Validate the invite token
+      fetch(`/api/invites/validate/${token}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.error) {
+            setInviteMessage(`Error: ${data.error}`);
+          } else {
+            setInviteData(data);
+          }
+        })
+        .catch((err) => {
+          setInviteMessage("Error validating invite");
+          console.error(err);
+        });
+    }
+  }, []);
+
   // Handle switching active user to represent Auth simulation
   const handleUserRoleSwitch = (uid: string) => {
     const targetUser = users.find(u => u.uid === uid);
     if (targetUser) {
       setCurrentUser(targetUser);
+      // Set appropriate tab based on role
+      if (targetUser.role === "volunteer") {
+        setActiveTab("my-shifts");
+      } else {
+        setActiveTab("sheet");
+      }
     }
   };
 
@@ -196,12 +258,195 @@ export default function App() {
     }
   };
 
+  // Create new team (Super Admin only)
+  const handleCreateTeam = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setTeamErrorMessage("");
+    setTeamSuccessMessage("");
+
+    if (!newTeamName) {
+      setTeamErrorMessage("Team name is required.");
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/teams", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: newTeamName }),
+      });
+
+      if (response.ok) {
+        const newTeam = await response.json();
+        setNewTeamName("");
+        setTeamSuccessMessage("Team created successfully!");
+        setTeams([...teams, newTeam]);
+        if (!inviteTeamId) {
+          setInviteTeamId(newTeam.teamId);
+        }
+      } else {
+        const err = await response.json();
+        setTeamErrorMessage(err.error || "Failed to create team.");
+      }
+    } catch (err) {
+      console.error(err);
+      setTeamErrorMessage("Network error creating team.");
+    }
+  };
+
+  // Send invite (Admin/Super Admin)
+  const handleSendInvite = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setInviteErrorMessage("");
+    setInviteSuccessMessage("");
+
+    if (!inviteEmail || !inviteTeamId || !inviteRole) {
+      setInviteErrorMessage("Email, team, and role are required.");
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/invites", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: inviteEmail, teamId: inviteTeamId, role: inviteRole }),
+      });
+
+      if (response.ok) {
+        const invite = await response.json();
+        setInviteEmail("");
+        setInviteSuccessMessage(`Invite sent to ${inviteEmail}! Link: ${invite.inviteLink}`);
+        setInvites([...invites, invite]);
+      } else {
+        const err = await response.json();
+        setInviteErrorMessage(err.error || "Failed to send invite.");
+      }
+    } catch (err) {
+      console.error(err);
+      setInviteErrorMessage("Network error sending invite.");
+    }
+  };
+
+  // Accept invite (for public invite page)
+  const handleAcceptInvite = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setInviteProcessing(true);
+    setInviteMessage("");
+
+    if (!inviteFormData.name) {
+      setInviteMessage("Name is required");
+      setInviteProcessing(false);
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/users/accept-invite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          token: inviteToken,
+          name: inviteFormData.name,
+          phone: inviteFormData.phone
+        }),
+      });
+
+      if (response.ok) {
+        const newUser = await response.json();
+        setInviteMessage("Successfully created account! Redirecting...");
+        // Redirect to home page after 2 seconds
+        setTimeout(() => {
+          window.location.href = "/";
+        }, 2000);
+      } else {
+        const err = await response.json();
+        setInviteMessage(err.error || "Failed to accept invite");
+      }
+    } catch (err) {
+      console.error(err);
+      setInviteMessage("Network error accepting invite");
+    } finally {
+      setInviteProcessing(false);
+    }
+  };
+
   if (isLoading || !currentUser) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[#fcfcfc] text-[#1a1a1a]">
         <div className="flex flex-col items-center gap-3">
           <RefreshCcw className="w-8 h-8 animate-spin text-[#4f46e5]" />
           <p className="text-sm font-medium font-display tracking-widest uppercase">Launching Firestore Scheduler...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show invite acceptance page if invite token is present
+  if (inviteToken && inviteData) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-indigo-50 to-blue-50">
+        <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full mx-4">
+          <div className="text-center mb-6">
+            <h1 className="text-2xl font-bold text-slate-800 mb-2">Join Volunteer Team</h1>
+            <p className="text-sm text-slate-600">You've been invited to join</p>
+            <p className="text-lg font-semibold text-indigo-600 mt-1">{inviteData.teamName}</p>
+          </div>
+
+          {inviteMessage && (
+            <div className={`rounded-lg p-3 mb-4 text-sm ${
+              inviteMessage.includes("Error") || inviteMessage.includes("Network")
+                ? "bg-red-50 text-red-700 border border-red-200"
+                : "bg-green-50 text-green-700 border border-green-200"
+            }`}>
+              {inviteMessage}
+            </div>
+          )}
+
+          <form onSubmit={handleAcceptInvite} className="space-y-4">
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                Your Full Name
+              </label>
+              <input
+                type="text"
+                value={inviteFormData.name}
+                onChange={(e) => setInviteFormData({ ...inviteFormData, name: e.target.value })}
+                placeholder="e.g. John Smith"
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-indigo-500 text-sm"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                Phone Number (Optional)
+              </label>
+              <input
+                type="tel"
+                value={inviteFormData.phone}
+                onChange={(e) => setInviteFormData({ ...inviteFormData, phone: e.target.value })}
+                placeholder="e.g. +852 9123 4567"
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-indigo-500 text-sm"
+              />
+            </div>
+
+            <div className="bg-slate-50 rounded-lg p-3 text-xs text-slate-600">
+              <p className="font-medium text-slate-700 mb-1">Invite Details:</p>
+              <p>Email: <span className="font-mono text-slate-800">{inviteData.email}</span></p>
+              <p>Role: <span className="font-semibold text-indigo-600 capitalize">{inviteData.role}</span></p>
+            </div>
+
+            <button
+              type="submit"
+              disabled={inviteProcessing}
+              className="w-full bg-indigo-500 hover:bg-indigo-600 disabled:bg-slate-400 text-white font-semibold py-2.5 rounded-lg transition-colors disabled:cursor-not-allowed"
+            >
+              {inviteProcessing ? "Creating Account..." : "Accept Invite & Create Account"}
+            </button>
+          </form>
+
+          <p className="text-xs text-slate-500 text-center mt-6">
+            By accepting this invite, you agree to join the volunteer scheduling system.
+          </p>
         </div>
       </div>
     );
@@ -224,44 +469,64 @@ export default function App() {
         {/* Sidebar Navigation */}
         <nav className="flex-1 p-4 space-y-1.5 overflow-y-auto custom-scrollbar">
           <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 px-2">
-            SYSTEM ENGINE VIEWS
+            {currentUser.role === "volunteer" ? "MY VOLUNTEER MENU" : "SYSTEM ENGINE VIEWS"}
           </div>
-          
-          <button
-            onClick={() => setActiveTab("sheet")}
-            className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-md text-xs font-semibold tracking-wide transition-all ${
-              activeTab === "sheet"
-                ? "bg-[#f5f5f5] text-[#1a1a1a] border-l-4 border-[#4f46e5]"
-                : "text-gray-500 hover:bg-[#f9f9f9] hover:text-[#1a1a1a]"
-            }`}
-          >
-            <Grid className="w-4 h-4 shrink-0" />
-            <span>The Sheet (Grid View)</span>
-          </button>
 
-          <button
-            onClick={() => setActiveTab("directory")}
-            className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-md text-xs font-semibold tracking-wide transition-all ${
-              activeTab === "directory"
-                ? "bg-[#f5f5f5] text-[#1a1a1a] border-l-4 border-[#4f46e5]"
-                : "text-gray-500 hover:bg-[#f9f9f9] hover:text-[#1a1a1a]"
-            }`}
-          >
-            <Users className="w-4 h-4 shrink-0" />
-            <span>Team Directory ({users.length})</span>
-          </button>
+          {currentUser.role === "volunteer" ? (
+            <>
+              {/* Volunteer Navigation */}
+              <button
+                onClick={() => setActiveTab("my-shifts")}
+                className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-md text-xs font-semibold tracking-wide transition-all ${
+                  activeTab === "my-shifts"
+                    ? "bg-[#f5f5f5] text-[#1a1a1a] border-l-4 border-[#4f46e5]"
+                    : "text-gray-500 hover:bg-[#f9f9f9] hover:text-[#1a1a1a]"
+                }`}
+              >
+                <Calendar className="w-4 h-4 shrink-0" />
+                <span>My Shifts & Tasks</span>
+              </button>
+            </>
+          ) : (
+            <>
+              {/* Admin Navigation */}
+              <button
+                onClick={() => setActiveTab("sheet")}
+                className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-md text-xs font-semibold tracking-wide transition-all ${
+                  activeTab === "sheet"
+                    ? "bg-[#f5f5f5] text-[#1a1a1a] border-l-4 border-[#4f46e5]"
+                    : "text-gray-500 hover:bg-[#f9f9f9] hover:text-[#1a1a1a]"
+                }`}
+              >
+                <Grid className="w-4 h-4 shrink-0" />
+                <span>The Sheet (Grid View)</span>
+              </button>
 
-          <button
-            onClick={() => setActiveTab("logs")}
-            className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-md text-xs font-semibold tracking-wide transition-all ${
-              activeTab === "logs"
-                ? "bg-[#f5f5f5] text-[#1a1a1a] border-l-4 border-[#4f46e5]"
-                : "text-gray-500 hover:bg-[#f9f9f9] hover:text-[#1a1a1a]"
-            }`}
-          >
-            <Activity className="w-4 h-4 shrink-0" />
-            <span>Emulator Logs Console</span>
-          </button>
+              <button
+                onClick={() => setActiveTab("directory")}
+                className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-md text-xs font-semibold tracking-wide transition-all ${
+                  activeTab === "directory"
+                    ? "bg-[#f5f5f5] text-[#1a1a1a] border-l-4 border-[#4f46e5]"
+                    : "text-gray-500 hover:bg-[#f9f9f9] hover:text-[#1a1a1a]"
+                }`}
+              >
+                <Users className="w-4 h-4 shrink-0" />
+                <span>Team Directory ({users.length})</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab("logs")}
+                className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-md text-xs font-semibold tracking-wide transition-all ${
+                  activeTab === "logs"
+                    ? "bg-[#f5f5f5] text-[#1a1a1a] border-l-4 border-[#4f46e5]"
+                    : "text-gray-500 hover:bg-[#f9f9f9] hover:text-[#1a1a1a]"
+                }`}
+              >
+                <Activity className="w-4 h-4 shrink-0" />
+                <span>Emulator Logs Console</span>
+              </button>
+            </>
+          )}
 
           {/* SIMULATION ZONE / ACTIVE USER PROFILE CHANGER */}
           <div className="pt-6">
@@ -402,41 +667,55 @@ export default function App() {
             {/* VIEW TAB SELECTION CONTROLS */}
             <div className="bg-slate-50 border-b border-[#e5e5e5] h-12 px-6 flex items-center justify-between select-none">
               <div className="flex space-x-2">
-                <button
-                  onClick={() => setActiveTab("sheet")}
-                  className={`px-4 py-1.5 rounded-md text-xs font-semibold transition-all ${
-                    activeTab === "sheet"
-                      ? "bg-slate-800 text-white"
-                      : "text-slate-600 hover:bg-slate-200"
-                  }`}
-                >
-                  The Sheet Grid
-                </button>
-                <button
-                  onClick={() => setActiveTab("directory")}
-                  className={`px-4 py-1.5 rounded-md text-xs font-semibold transition-all ${
-                    activeTab === "directory"
-                      ? "bg-slate-800 text-white"
-                      : "text-slate-600 hover:bg-slate-200"
-                  }`}
-                >
-                  Team Member Directory
-                </button>
-                <button
-                  onClick={() => setActiveTab("logs")}
-                  className={`px-4 py-1.5 rounded-md text-xs font-semibold transition-all ${
-                    activeTab === "logs"
-                      ? "bg-slate-800 text-white"
-                      : "text-slate-600 hover:bg-slate-200"
-                  }`}
-                >
-                  Logs Emulator ({logs.length})
-                </button>
+                {currentUser.role === "volunteer" ? (
+                  <div className="text-xs font-medium text-slate-600">
+                    My Volunteer Dashboard
+                  </div>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => setActiveTab("sheet")}
+                      className={`px-4 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                        activeTab === "sheet"
+                          ? "bg-slate-800 text-white"
+                          : "text-slate-600 hover:bg-slate-200"
+                      }`}
+                    >
+                      The Sheet Grid
+                    </button>
+                    <button
+                      onClick={() => setActiveTab("directory")}
+                      className={`px-4 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                        activeTab === "directory"
+                          ? "bg-slate-800 text-white"
+                          : "text-slate-600 hover:bg-slate-200"
+                      }`}
+                    >
+                      Team Member Directory
+                    </button>
+                    <button
+                      onClick={() => setActiveTab("logs")}
+                      className={`px-4 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                        activeTab === "logs"
+                          ? "bg-slate-800 text-white"
+                          : "text-slate-600 hover:bg-slate-200"
+                      }`}
+                    >
+                      Logs Emulator ({logs.length})
+                    </button>
+                  </>
+                )}
               </div>
 
               {/* Status label based on Active view */}
               <div className="text-[11px] font-medium text-slate-500 font-mono">
-                Active tab context: <strong className="text-slate-700 capitalize">{activeTab}</strong>
+                {currentUser.role === "volunteer" ? (
+                  <span>Role: <strong className="text-slate-700">Volunteer</strong></span>
+                ) : (
+                  <>
+                    Active tab context: <strong className="text-slate-700 capitalize">{activeTab}</strong>
+                  </>
+                )}
               </div>
             </div>
 
@@ -458,7 +737,125 @@ export default function App() {
               {/* TAB 2: TEAM DIRECTORY VIEW */}
               {activeTab === "directory" && (
                 <div className="flex-1 overflow-auto custom-scrollbar p-6 flex flex-col gap-6">
-                  
+
+                  {/* Team Management Panel (Super Admin Only) */}
+                  {currentUser.role === "superadmin" && (
+                    <div className="bg-white rounded-lg border border-[#e5e5e5] p-5">
+                      <h3 className="text-sm font-semibold text-slate-800 mb-2 font-display flex items-center gap-1.5">
+                        <Users className="w-4 h-4 text-[#4f46e5]" />
+                        <span>Create New Team</span>
+                      </h3>
+                      <p className="text-xs text-slate-500 mb-4 leading-normal">
+                        Create a new team for managing volunteer shifts and invites.
+                      </p>
+
+                      <form onSubmit={handleCreateTeam} className="flex gap-3">
+                        <input
+                          type="text"
+                          value={newTeamName}
+                          onChange={(e) => setNewTeamName(e.target.value)}
+                          placeholder="e.g. Hong Kong Shabbat Community"
+                          className="flex-1 text-xs bg-slate-50 border border-slate-200 rounded px-2.5 py-2 text-slate-800 focus:outline-[#4f46e5]"
+                          required
+                        />
+                        <button
+                          type="submit"
+                          className="bg-indigo-500 hover:bg-indigo-600 text-white text-xs px-4 py-2 font-semibold rounded hover:cursor-pointer transition-colors flex items-center gap-1"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>Create Team</span>
+                        </button>
+                      </form>
+
+                      {teamSuccessMessage && (
+                        <p className="text-xs text-green-600 bg-green-50 rounded p-2 mt-3 font-medium">✓ {teamSuccessMessage}</p>
+                      )}
+                      {teamErrorMessage && (
+                        <p className="text-xs text-rose-600 bg-rose-50 rounded p-2 mt-3 font-medium">⚠ {teamErrorMessage}</p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Send Invite Panel (Admin & Super Admin) */}
+                  {(currentUser.role === "superadmin" || currentUser.role === "admin") && (
+                    <div className="bg-white rounded-lg border border-[#e5e5e5] p-5">
+                      <h3 className="text-sm font-semibold text-slate-800 mb-2 font-display flex items-center gap-1.5">
+                        <Mail className="w-4 h-4 text-[#4f46e5]" />
+                        <span>Send Invite to Volunteer</span>
+                      </h3>
+                      <p className="text-xs text-slate-500 mb-4 leading-normal">
+                        Send an invite link to a new volunteer or team member to join the system.
+                      </p>
+
+                      <form onSubmit={handleSendInvite} className="grid grid-cols-1 md:grid-cols-5 gap-3 items-end">
+                        <div>
+                          <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">
+                            Email
+                          </label>
+                          <input
+                            type="email"
+                            value={inviteEmail}
+                            onChange={(e) => setInviteEmail(e.target.value)}
+                            placeholder="volunteer@example.com"
+                            className="w-full text-xs bg-slate-50 border border-slate-200 rounded px-2.5 py-2 text-slate-800 focus:outline-[#4f46e5]"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">
+                            Team
+                          </label>
+                          <select
+                            value={inviteTeamId}
+                            onChange={(e) => setInviteTeamId(e.target.value)}
+                            className="w-full text-xs bg-slate-50 border border-slate-200 rounded px-2.5 py-2 text-slate-800 focus:outline-[#4f46e5]"
+                            required
+                          >
+                            <option value="">Select Team</option>
+                            {teams.length === 0 ? (
+                              <option disabled>No teams available</option>
+                            ) : (
+                              teams.map((team) => (
+                                <option key={team.teamId} value={team.teamId}>
+                                  {team.name}
+                                </option>
+                              ))
+                            )}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">
+                            Role
+                          </label>
+                          <select
+                            value={inviteRole}
+                            onChange={(e) => setInviteRole(e.target.value as "admin" | "volunteer")}
+                            className="w-full text-xs bg-slate-50 border border-slate-200 rounded px-2.5 py-2 text-slate-800 focus:outline-[#4f46e5]"
+                          >
+                            <option value="volunteer">Volunteer</option>
+                            <option value="admin">Admin</option>
+                          </select>
+                        </div>
+                        <div>
+                          <button
+                            type="submit"
+                            className="w-full bg-slate-800 hover:bg-slate-900 text-white text-xs px-4 py-2 font-semibold rounded hover:cursor-pointer transition-colors flex items-center justify-center gap-1"
+                          >
+                            <Mail className="w-3.5 h-3.5" />
+                            <span>Send Invite</span>
+                          </button>
+                        </div>
+                      </form>
+
+                      {inviteSuccessMessage && (
+                        <p className="text-xs text-green-600 bg-green-50 rounded p-2 mt-3 font-medium">✓ {inviteSuccessMessage}</p>
+                      )}
+                      {inviteErrorMessage && (
+                        <p className="text-xs text-rose-600 bg-rose-50 rounded p-2 mt-3 font-medium">⚠ {inviteErrorMessage}</p>
+                      )}
+                    </div>
+                  )}
+
                   {/* Register New Volunteer Panel */}
                   <div className="bg-white rounded-lg border border-[#e5e5e5] p-5">
                     <h3 className="text-sm font-semibold text-slate-800 mb-2 font-display flex items-center gap-1.5">
@@ -686,6 +1083,16 @@ export default function App() {
                   </div>
 
                 </div>
+              )}
+
+              {/* TAB: VOLUNTEER DASHBOARD */}
+              {activeTab === "my-shifts" && currentUser.role === "volunteer" && (
+                <VolunteerDashboard
+                  currentUser={currentUser}
+                  shifts={shifts}
+                  users={users}
+                  onUpdate={fetchData}
+                />
               )}
 
             </div>

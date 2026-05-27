@@ -1,9 +1,31 @@
+export interface Team {
+  teamId: string;
+  name: string;
+  createdBy: string;
+  createdAt: string;
+  googleServiceAccountEmail?: string;
+}
+
+export interface Invite {
+  inviteId: string;
+  teamId: string;
+  email: string;
+  token: string;
+  role: "admin" | "volunteer";
+  expiresAt: string;
+  createdAt: string;
+  acceptedAt?: string;
+}
+
 export interface User {
   uid: string;
   name: string;
   email: string;
   phone: string;
   role: "superadmin" | "admin" | "volunteer";
+  teamId?: string;
+  googleCalendarId?: string;
+  googleCalendarSyncEnabled?: boolean;
 }
 
 export interface Shift {
