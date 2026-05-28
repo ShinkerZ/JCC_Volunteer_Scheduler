@@ -681,7 +681,7 @@ export default function App() {
                           : "text-slate-600 hover:bg-slate-200"
                       }`}
                     >
-                      The Sheet Grid
+                      Shifts Grid
                     </button>
                     <button
                       onClick={() => setActiveTab("directory")}

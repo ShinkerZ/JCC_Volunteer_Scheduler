@@ -12,7 +12,7 @@ import {
   CheckCircle2, 
   AlertCircle, 
   HelpCircle,
-  Hash
+  
 } from "lucide-react";
 import { Shift, User } from "../types";
 
@@ -30,7 +30,6 @@ export default function GoogleSheetView({
   onUpdate 
 }: GoogleSheetViewProps) {
   const [selectedShiftId, setSelectedShiftId] = useState<string | null>(null);
-  const [selectedColumn, setSelectedColumn] = useState<string | null>(null); // "A", "B", "C", "D", "E"
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
@@ -64,24 +63,14 @@ export default function GoogleSheetView({
   });
 
   // Handle cell click selection
-  const handleCellClick = (shiftId: string, col: string) => {
+  const handleCellClick = (shiftId: string) => {
     setSelectedShiftId(shiftId);
-    setSelectedColumn(col);
   };
 
-  // Get cell contents for Formula Bar (Google Sheets style)
-  const getFormulaBarValue = () => {
-    if (!selectedShift) return "Select any cell in 'The Sheet' to begin editing or viewing detailed slot attributes...";
-    const user = users.find(u => u.uid === selectedShift.assignedUserId);
-    
-    switch (selectedColumn) {
-      case "A": return `=DATE_VALUE("${selectedShift.date}") [Friday/Saturday Slot]`;
-      case "B": return `=SHIFT_TIME("${selectedShift.startTime} - ${selectedShift.endTime} HKT")`;
-      case "C": return `=SHIFT_TYPE("${selectedShift.type.toUpperCase()}") [${selectedShift.type === "Friday" ? "1.5h Sunset-aligned" : "4h Fixed-slot"}]`;
-      case "D": return `=ASSIGNED_VOLUNTEER("${user ? user.name : "VACANT"}")`;
-      case "E": return `=SHIFT_STATUS("${selectedShift.status.toUpperCase()}")`;
-      default: return `Row: ${selectedShift.date} | Shift: ${selectedShift.type} | Current State: ${selectedShift.status}`;
-    }
+  const formatDate = (isoDate: string) => {
+    const dt = new Date(isoDate);
+    if (isNaN(dt.getTime())) return isoDate;
+    return dt.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
   };
 
   // Open Edit Dialog for Admins
@@ -196,7 +185,7 @@ export default function GoogleSheetView({
           </span>
           <div>
             <h3 className="font-display font-semibold text-slate-800 flex items-center gap-1.5">
-              <span>The Sheet</span>
+              <span>Shifts Grid</span>
               <span className="text-xs bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded font-mono font-normal">HKT (UTC+8)</span>
             </h3>
             <p className="text-xs text-slate-500">Google Sheet style scheduling grid with real-time solar tracking</p>
@@ -246,41 +235,28 @@ export default function GoogleSheetView({
         </div>
       </div>
 
-      {/* 2. Interactive Spreadsheet Formula Bar */}
-      <div className="bg-white border-b border-slate-200 px-4 py-2 flex items-center gap-2 min-h-11">
-        <div className="bg-slate-100 text-slate-500 font-mono text-xs font-bold px-2 py-1 rounded border border-slate-200 min-w-[36px] text-center select-none shadow-2xs">
-          {selectedShiftId ? `${selectedColumn || "A"}${filteredShifts.findIndex(s => s.shiftId === selectedShiftId) + 1}` : "fx"}
-        </div>
-        <div className="w-px h-5 bg-slate-200 select-none"></div>
-        <div className="text-slate-400 select-none font-mono text-[11px] font-semibold italic min-w-5">f(x)</div>
-        <div className="flex-1 font-mono text-xs text-slate-600 bg-slate-50/80 rounded px-3 py-1 border border-slate-100 truncate shadow-inner">
-          {getFormulaBarValue()}
-        </div>
-      </div>
+      {/* Simplified header — functions toolbar removed */}
 
       {/* 3. Shift Cell Grid (Scrollable spreadsheet) */}
       <div className="flex-1 overflow-auto custom-scrollbar bg-slate-100">
         <table className="w-full border-collapse bg-white table-fixed min-w-[800px]">
           {/* Column identifiers (A, B, C, D, E...) */}
           <thead>
-            <tr className="bg-slate-50 text-slate-500 font-mono text-xs font-semibold select-none shadow-[0_1px_0_0_rgba(226,232,240,1)] sticky top-0 z-20">
-              <th className="w-12 bg-slate-100 border-r border-b border-slate-200 text-center h-8 font-normal flex items-center justify-center">
-                <Hash className="w-3.5 h-3.5 text-slate-400" />
+            <tr className="bg-slate-50 text-slate-500 text-xs font-semibold select-none sticky top-0 z-20">
+              <th className="w-[18%] border-r border-b border-slate-200 text-left px-4 h-8 select-none font-normal">
+                Date (HKT)
               </th>
-              <th className="w-[18%] border-r border-b border-slate-200 text-left px-4 h-8 select-none font-normal relative">
-                A <span className="absolute right-2 text-[10px] text-slate-400 font-sans tracking-wide">DATE (HKT)</span>
+              <th className="w-[18%] border-r border-b border-slate-200 text-left px-4 h-8 select-none font-normal">
+                Shift Time
               </th>
-              <th className="w-[18%] border-r border-b border-slate-200 text-left px-4 h-8 select-none font-normal relative">
-                B <span className="absolute right-2 text-[10px] text-slate-400 font-sans tracking-wide">SHIFT TIME</span>
+              <th className="w-[16%] border-r border-b border-slate-200 text-left px-4 h-8 select-none font-normal">
+                Type
               </th>
-              <th className="w-[16%] border-r border-b border-slate-200 text-left px-4 h-8 select-none font-normal relative">
-                C <span className="absolute right-2 text-[10px] text-slate-400 font-sans tracking-wide">TYPE</span>
+              <th className="w-[28%] border-r border-b border-slate-200 text-left px-4 h-8 select-none font-normal">
+                Assigned Volunteer
               </th>
-              <th className="w-[28%] border-r border-b border-slate-200 text-left px-4 h-8 select-none font-normal relative">
-                D <span className="absolute right-2 text-[10px] text-slate-400 font-sans tracking-wide">ASSIGNED VOLUNTEER</span>
-              </th>
-              <th className="w-[20%] border-r border-b border-slate-200 text-left px-4 h-8 select-none font-normal relative">
-                E <span className="absolute right-2 text-[10px] text-slate-400 font-sans tracking-wide">STATUS</span>
+              <th className="w-[20%] border-r border-b border-slate-200 text-left px-4 h-8 select-none font-normal">
+                Status
               </th>
             </tr>
           </thead>
@@ -289,7 +265,7 @@ export default function GoogleSheetView({
           <tbody>
             {filteredShifts.length === 0 ? (
               <tr>
-                <td colSpan={6} className="text-center py-12 text-slate-400 font-sans">
+                <td colSpan={5} className="text-center py-12 text-slate-400 font-sans">
                   <span className="block text-base font-medium text-slate-500 mb-1">No Shifts Found</span>
                   <span className="text-xs">Adjust search keys or type filters.</span>
                 </td>
@@ -297,31 +273,23 @@ export default function GoogleSheetView({
             ) : (
               filteredShifts.map((shift, idx) => {
                 const assignedUser = users.find(u => u.uid === shift.assignedUserId);
-                const rowNum = idx + 1;
                 
                 return (
                   <tr key={shift.shiftId} className="group border-b border-slate-100 hover:bg-slate-50/50">
-                    {/* Row numbering (Google Sheets 1, 2, 3...) */}
-                    <td className="bg-slate-50 text-slate-400 font-mono text-[10px] text-center border-r border-b border-slate-200 select-none h-12 sticky left-0 font-medium">
-                      {rowNum}
-                    </td>
 
                     {/* Col A: Date */}
                     <td 
-                      onClick={() => handleCellClick(shift.shiftId, "A")}
+                      onClick={() => handleCellClick(shift.shiftId)}
                       className={getCellClasses(shift.shiftId, "A")}
                     >
                       <div className="flex items-center gap-1.5 font-sans">
-                        <span className="font-mono text-xs">{shift.date}</span>
-                        <span className="text-[10px] capitalize text-slate-400 font-normal">
-                          ({new Date(shift.date).toLocaleDateString('en-US', { weekday: 'short' })})
-                        </span>
+                        <span className="font-mono text-xs">{formatDate(shift.date)}</span>
                       </div>
                     </td>
 
                     {/* Col B: Shift Time */}
                     <td 
-                      onClick={() => handleCellClick(shift.shiftId, "B")}
+                      onClick={() => handleCellClick(shift.shiftId)}
                       className={getCellClasses(shift.shiftId, "B")}
                     >
                       <div className="flex items-center gap-1.5 font-mono text-xs text-slate-600">
@@ -332,7 +300,7 @@ export default function GoogleSheetView({
 
                     {/* Col C: Type */}
                     <td 
-                      onClick={() => handleCellClick(shift.shiftId, "C")}
+                      onClick={() => handleCellClick(shift.shiftId)}
                       className={getCellClasses(shift.shiftId, "C")}
                     >
                       <span className={`inline-block text-[10px] px-1.5 py-0.5 rounded-sm font-mono font-medium ${
@@ -346,15 +314,12 @@ export default function GoogleSheetView({
 
                     {/* Col D: Assigned Volunteer */}
                     <td 
-                      onClick={() => handleCellClick(shift.shiftId, "D")}
+                      onClick={() => handleCellClick(shift.shiftId)}
                       className={getCellClasses(shift.shiftId, "D")}
                     >
                       {assignedUser ? (
-                        <div className="flex items-center justify-between gap-1 w-full truncate">
+                        <div className="flex items-center gap-1 w-full truncate">
                           <span className="font-medium text-slate-700 truncate">{assignedUser.name}</span>
-                          <span className="text-[10px] text-slate-400 font-mono shrink-0 font-normal">
-                            {assignedUser.phone.slice(-4)}
-                          </span>
                         </div>
                       ) : (
                         <span className="text-slate-400 italic text-[13px] tracking-wide">-- Vacant Slot --</span>
@@ -363,7 +328,7 @@ export default function GoogleSheetView({
 
                     {/* Col E: Status cell */}
                     <td 
-                      onClick={() => handleCellClick(shift.shiftId, "E")}
+                      onClick={() => handleCellClick(shift.shiftId)}
                       className={getCellClasses(shift.shiftId, "E")}
                     >
                       <div className="flex items-center justify-between gap-1.5">
@@ -412,7 +377,7 @@ export default function GoogleSheetView({
         <div>
           {selectedShift ? (
             <div className="text-sm text-slate-600">
-              Selected: <strong className="text-slate-800 font-mono">{selectedShift.date} ({selectedShift.type})</strong> -{" "}
+              Selected: <strong className="text-slate-800 font-mono">{formatDate(selectedShift.date)} ({selectedShift.type})</strong> -{" "}
               {selectedShift.assignedUserId ? (
                 <span>Assigned to <strong className="text-slate-800">{users.find(u => u.uid === selectedShift.assignedUserId)?.name}</strong></span>
               ) : (
@@ -511,7 +476,7 @@ export default function GoogleSheetView({
                 </label>
                 <div className="bg-slate-100 px-3 py-2 rounded-md text-slate-800 text-sm font-mono flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-slate-400" />
-                  <span>{editingShift.date} ({editingShift.type})</span>
+                  <span>{formatDate(editingShift.date)} ({editingShift.type})</span>
                 </div>
               </div>
 
