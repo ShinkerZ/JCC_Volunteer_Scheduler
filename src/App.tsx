@@ -44,6 +44,7 @@ export default function App() {
   const [newUserEmail, setNewUserEmail] = useState("");
   const [newUserPhone, setNewUserPhone] = useState("");
   const [newUserRole, setNewUserRole] = useState<"admin" | "volunteer">("volunteer");
+  const [newUserCountry, setNewUserCountry] = useState<string>("");
   const [userSuccessMessage, setUserSuccessMessage] = useState("");
   const [userErrorMessage, setUserErrorMessage] = useState("");
 
@@ -196,6 +197,11 @@ export default function App() {
       return;
     }
 
+    if (newUserRole === "admin" && !newUserCountry) {
+      setUserErrorMessage("Country is required for Admin role.");
+      return;
+    }
+
     try {
       const response = await fetch("/api/users", {
         method: "POST",
@@ -204,7 +210,8 @@ export default function App() {
           name: newUserName,
           email: newUserEmail,
           phone: newUserPhone,
-          role: newUserRole
+          role: newUserRole,
+          ...(newUserRole === "admin" && { country: newUserCountry })
         }),
       });
 
@@ -212,6 +219,7 @@ export default function App() {
         setNewUserName("");
         setNewUserEmail("");
         setNewUserPhone("");
+        setNewUserCountry("");
         setUserSuccessMessage("Successfully registered user on Firestore emulator!");
         fetchData();
       } else {
@@ -866,67 +874,106 @@ export default function App() {
                       Provide information based on Synagogue protocol. Newly added users are synchronized to Auth and Firestore immediately.
                     </p>
 
-                    <form onSubmit={handleCreateUserSubmit} className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
-                      <div>
-                        <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">
-                          Full Name
-                        </label>
-                        <input
-                          type="text"
-                          value={newUserName}
-                          onChange={(e) => setNewUserName(e.target.value)}
-                          placeholder="e.g. Benjamin Levy"
-                          className="w-full text-xs bg-slate-50 border border-slate-200 rounded px-2.5 py-2 text-slate-800 focus:outline-[#4f46e5]"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">
-                          Email address
-                        </label>
-                        <input
-                          type="email"
-                          value={newUserEmail}
-                          onChange={(e) => setNewUserEmail(e.target.value)}
-                          placeholder="e.g. benjamin@synagogue.org"
-                          className="w-full text-xs bg-slate-50 border border-slate-200 rounded px-2.5 py-2 text-slate-800 focus:outline-[#4f46e5]"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">
-                          Phone Number (Col E Backup)
-                        </label>
-                        <input
-                          type="text"
-                          value={newUserPhone}
-                          onChange={(e) => setNewUserPhone(e.target.value)}
-                          placeholder="e.g. +852 9123 4567"
-                          className="w-full text-xs bg-slate-50 border border-slate-200 rounded px-2.5 py-2 text-slate-800 focus:outline-[#4f46e5]"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">
-                          Assigned Role on Firestore
-                        </label>
-                        <div className="flex gap-2">
+                    <form onSubmit={handleCreateUserSubmit} className="space-y-3">
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+                        <div>
+                          <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">
+                            Full Name
+                          </label>
+                          <input
+                            type="text"
+                            value={newUserName}
+                            onChange={(e) => setNewUserName(e.target.value)}
+                            placeholder="e.g. Benjamin Levy"
+                            className="w-full text-xs bg-slate-50 border border-slate-200 rounded px-2.5 py-2 text-slate-800 focus:outline-[#4f46e5]"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">
+                            Email address
+                          </label>
+                          <input
+                            type="email"
+                            value={newUserEmail}
+                            onChange={(e) => setNewUserEmail(e.target.value)}
+                            placeholder="e.g. benjamin@synagogue.org"
+                            className="w-full text-xs bg-slate-50 border border-slate-200 rounded px-2.5 py-2 text-slate-800 focus:outline-[#4f46e5]"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">
+                            Phone Number (Col E Backup)
+                          </label>
+                          <input
+                            type="text"
+                            value={newUserPhone}
+                            onChange={(e) => setNewUserPhone(e.target.value)}
+                            placeholder="e.g. +852 9123 4567"
+                            className="w-full text-xs bg-slate-50 border border-slate-200 rounded px-2.5 py-2 text-slate-800 focus:outline-[#4f46e5]"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">
+                            Assigned Role on Firestore
+                          </label>
                           <select
                             value={newUserRole}
                             onChange={(e) => setNewUserRole(e.target.value as "admin" | "volunteer")}
-                            className="flex-1 text-xs bg-slate-50 border border-slate-200 rounded px-2.5 py-2 text-slate-800 focus:outline-[#4f46e5]"
+                            className="w-full text-xs bg-slate-50 border border-slate-200 rounded px-2.5 py-2 text-slate-800 focus:outline-[#4f46e5]"
                           >
                             <option value="admin">Admin / Team Leader</option>
                             <option value="volunteer">Volunteer Specialist</option>
                           </select>
-                          
-                          <button
-                            type="submit"
-                            className="bg-slate-800 hover:bg-slate-900 border border-slate-800 text-white text-xs px-4 py-2 font-semibold rounded hover:cursor-pointer transition-colors shrink-0 flex items-center gap-1"
-                          >
-                            <Plus className="w-3.5 h-3.5" />
-                            <span>Add</span>
-                          </button>
                         </div>
+                      </div>
+
+                      {/* Country field - only shown for Admin role */}
+                      {newUserRole === "admin" && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">
+                              Country (for Hebcal sync) *
+                            </label>
+                            <select
+                              value={newUserCountry}
+                              onChange={(e) => setNewUserCountry(e.target.value)}
+                              className="w-full text-xs bg-slate-50 border border-slate-200 rounded px-2.5 py-2 text-slate-800 focus:outline-[#4f46e5]"
+                              required
+                            >
+                              <option value="">Select a country...</option>
+                              <option value="IL">Israel (IL)</option>
+                              <option value="US">United States (US)</option>
+                              <option value="GB">United Kingdom (GB)</option>
+                              <option value="CA">Canada (CA)</option>
+                              <option value="AU">Australia (AU)</option>
+                              <option value="FR">France (FR)</option>
+                              <option value="DE">Germany (DE)</option>
+                              <option value="HK">Hong Kong (HK)</option>
+                              <option value="SG">Singapore (SG)</option>
+                              <option value="ZA">South Africa (ZA)</option>
+                              <option value="AR">Argentina (AR)</option>
+                              <option value="BR">Brazil (BR)</option>
+                              <option value="MX">Mexico (MX)</option>
+                            </select>
+                          </div>
+                          <div className="flex items-center">
+                            <p className="text-xs text-slate-500">
+                              🔄 Hebrew holiday dates will sync automatically from Hebcal API
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="flex gap-2 justify-end">
+                        <button
+                          type="submit"
+                          className="bg-slate-800 hover:bg-slate-900 border border-slate-800 text-white text-xs px-4 py-2 font-semibold rounded hover:cursor-pointer transition-colors flex items-center gap-1"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>Add User</span>
+                        </button>
                       </div>
                     </form>
 

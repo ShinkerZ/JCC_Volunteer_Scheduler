@@ -10,6 +10,7 @@ interface User {
   phone: string;
   role: "superadmin" | "admin" | "volunteer";
   teamId?: string;
+  country?: string; // ISO 3166-1 alpha-2 (e.g., "IL", "US", "GB")
   googleCalendarId?: string;
   googleCalendarSyncEnabled?: boolean;
 }
@@ -162,6 +163,28 @@ async function unsyncShiftFromCalendar(shift: Shift, user: User, eventId?: strin
     console.error("Failed to remove from Google Calendar:", err);
     return { success: false, error: String(err) };
   }
+}
+
+// Helper: Fetch Hebrew holidays from Hebcal API for a given country
+async function fetchHebrewHolidaysForCountry(country: string, year: number = new Date().getFullYear()): Promise<Record<string, string>> {
+  const holidaysMap: Record<string, string> = {}; // YYYY-MM-DD -> holiday name
+  try {
+    const response = await fetch(`https://www.hebcal.com/api/holidays?year=${year}&country=${country.toUpperCase()}`);
+    if (response.ok) {
+      const data = await response.json();
+      if (data.holidays && Array.isArray(data.holidays)) {
+        data.holidays.forEach((holiday: any) => {
+          if (holiday.date) {
+            holidaysMap[holiday.date] = holiday.title;
+          }
+        });
+      }
+      console.log(`[Hebcal] Fetched ${Object.keys(holidaysMap).length} holidays for ${country}`);
+    }
+  } catch (err) {
+    console.warn(`[Hebcal] Failed to fetch holidays for ${country}:`, err);
+  }
+  return holidaysMap;
 }
 
 // Generate default users (50 users)
@@ -437,8 +460,8 @@ async function initializeServer() {
   });
 
   // Create user (Admins/Super Admin)
-  app.post("/api/users", (req, res) => {
-    const { name, email, phone, role } = req.body;
+  app.post("/api/users", async (req, res) => {
+    const { name, email, phone, role, country } = req.body;
     if (!name || !email || !role) {
       return res.status(400).json({ error: "Missing required fields" });
     }
@@ -452,15 +475,36 @@ async function initializeServer() {
       name,
       email,
       phone: phone || "+852 0000 0000",
-      role
+      role,
+      ...(country && { country }) // Store country if provided
     };
 
     db.users.push(newUser);
+
+    // If admin role and country provided, fetch Hebrew holidays for sync
+    if (role === "admin" && country) {
+      try {
+        const year = new Date().getFullYear();
+        const holidays = await fetchHebrewHolidaysForCountry(country, year);
+        if (Object.keys(holidays).length > 0) {
+          db.logs.unshift({
+            id: `log-hebcal-sync-${Date.now()}`,
+            timestamp: new Date().toISOString(),
+            type: "system",
+            message: `[Hebcal Sync] Admin ${name} set country to ${country}. Synced ${Object.keys(holidays).length} Hebrew holidays for ${year}.`,
+            details: { adminUid: newUser.uid, country, holidayCount: Object.keys(holidays).length, holidays }
+          });
+        }
+      } catch (err) {
+        console.error(`Failed to sync Hebcal holidays for ${country}:`, err);
+      }
+    }
+
     db.logs.unshift({
       id: `log-u-chk-${Date.now()}`,
       timestamp: new Date().toISOString(),
       type: "system",
-      message: `Created new user ${name} with role: ${role}.`
+      message: `Created new user ${name} with role: ${role}${country ? ` and country: ${country}` : ""}.`
     });
     saveDatabase();
     res.status(201).json(newUser);

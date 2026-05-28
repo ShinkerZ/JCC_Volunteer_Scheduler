@@ -24,6 +24,7 @@ export interface User {
   phone: string;
   role: "superadmin" | "admin" | "volunteer";
   teamId?: string;
+  country?: string; // ISO 3166-1 alpha-2 (e.g., "IL", "US", "GB")
   googleCalendarId?: string;
   googleCalendarSyncEnabled?: boolean;
 }

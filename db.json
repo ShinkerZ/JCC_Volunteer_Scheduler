@@ -4,7 +4,13 @@
       "teamId": "team-default-hkt",
       "name": "Hong Kong Shabbat Community",
       "createdBy": "user-superadmin",
-      "createdAt": "2026-05-28T13:07:53.862Z"
+      "createdAt": "2026-05-27T09:26:01.766Z"
+    },
+    {
+      "teamId": "team-1779986549838",
+      "name": "Brazil JCC",
+      "createdBy": "user-superadmin",
+      "createdAt": "2026-05-28T16:42:29.838Z"
     }
   ],
   "invites": [],
@@ -53,7 +59,7 @@
       "uid": "user-volunteer-5",
       "name": "Ka-Hing Chan",
       "email": "kahing.chan@hkvolunteers.org",
-      "phone": "+852 61617721",
+      "phone": "+852 68409367",
       "role": "volunteer",
       "teamId": "team-default-hkt"
     },
@@ -61,7 +67,7 @@
       "uid": "user-volunteer-6",
       "name": "Rachel Katz",
       "email": "rachel.katz@hkvolunteers.org",
-      "phone": "+852 67960521",
+      "phone": "+852 65634232",
       "role": "volunteer",
       "teamId": "team-default-hkt"
     },
@@ -69,7 +75,7 @@
       "uid": "user-volunteer-7",
       "name": "Joshua Stein",
       "email": "joshua.stein@hkvolunteers.org",
-      "phone": "+852 66335999",
+      "phone": "+852 66898862",
       "role": "volunteer",
       "teamId": "team-default-hkt"
     },
@@ -77,7 +83,7 @@
       "uid": "user-volunteer-8",
       "name": "Yee-Man Cheung",
       "email": "yeeman.cheung@hkvolunteers.org",
-      "phone": "+852 63240629",
+      "phone": "+852 61379162",
       "role": "volunteer",
       "teamId": "team-default-hkt"
     },
@@ -85,7 +91,7 @@
       "uid": "user-volunteer-9",
       "name": "Daniel Roth",
       "email": "daniel.roth@hkvolunteers.org",
-      "phone": "+852 66403175",
+      "phone": "+852 63920553",
       "role": "volunteer",
       "teamId": "team-default-hkt"
     },
@@ -93,7 +99,7 @@
       "uid": "user-volunteer-10",
       "name": "Hannah Kaplan",
       "email": "hannah.kaplan@hkvolunteers.org",
-      "phone": "+852 68306481",
+      "phone": "+852 61054749",
       "role": "volunteer",
       "teamId": "team-default-hkt"
     },
@@ -101,7 +107,7 @@
       "uid": "user-volunteer-11",
       "name": "Wai-Kin Tsang",
       "email": "waikin.tsang@hkvolunteers.org",
-      "phone": "+852 68358872",
+      "phone": "+852 63932407",
       "role": "volunteer",
       "teamId": "team-default-hkt"
     },
@@ -109,7 +115,7 @@
       "uid": "user-volunteer-12",
       "name": "Esther Shapiro",
       "email": "esther.shapiro@hkvolunteers.org",
-      "phone": "+852 61307342",
+      "phone": "+852 65684387",
       "role": "volunteer",
       "teamId": "team-default-hkt"
     },
@@ -117,7 +123,7 @@
       "uid": "user-volunteer-13",
       "name": "Samuel Rosenberg",
       "email": "samuel.rosenberg@hkvolunteers.org",
-      "phone": "+852 68554220",
+      "phone": "+852 68807864",
       "role": "volunteer",
       "teamId": "team-default-hkt"
     },
@@ -125,7 +131,7 @@
       "uid": "user-volunteer-14",
       "name": "Lai-Wah Wong",
       "email": "laiwah.wong@hkvolunteers.org",
-      "phone": "+852 65036780",
+      "phone": "+852 66566709",
       "role": "volunteer",
       "teamId": "team-default-hkt"
     },
@@ -133,7 +139,7 @@
       "uid": "user-volunteer-15",
       "name": "Jacob Kahn",
       "email": "jacob.kahn@hkvolunteers.org",
-      "phone": "+852 65073675",
+      "phone": "+852 61697729",
       "role": "volunteer",
       "teamId": "team-default-hkt"
     },
@@ -141,7 +147,7 @@
       "uid": "user-volunteer-16",
       "name": "Leah Berger",
       "email": "leah.berger@hkvolunteers.org",
-      "phone": "+852 65012272",
+      "phone": "+852 66282573",
       "role": "volunteer",
       "teamId": "team-default-hkt"
     },
@@ -149,7 +155,7 @@
       "uid": "user-volunteer-17",
       "name": "Chun-Yip Lau",
       "email": "chunyip.lau@hkvolunteers.org",
-      "phone": "+852 61778418",
+      "phone": "+852 67025141",
       "role": "volunteer",
       "teamId": "team-default-hkt"
     },
@@ -157,7 +163,7 @@
       "uid": "user-volunteer-18",
       "name": "Ruth Rubin",
       "email": "ruth.rubin@hkvolunteers.org",
-      "phone": "+852 62490825",
+      "phone": "+852 64760562",
       "role": "volunteer",
       "teamId": "team-default-hkt"
     },
@@ -165,7 +171,7 @@
       "uid": "user-volunteer-19",
       "name": "Isaac Weinberg",
       "email": "isaac.weinberg@hkvolunteers.org",
-      "phone": "+852 64059408",
+      "phone": "+852 68310722",
       "role": "volunteer",
       "teamId": "team-default-hkt"
     },
@@ -173,7 +179,7 @@
       "uid": "user-volunteer-20",
       "name": "Ka-Hing Li",
       "email": "kahing.li@hkvolunteers.org",
-      "phone": "+852 62995521",
+      "phone": "+852 63041448",
       "role": "volunteer",
       "teamId": "team-default-hkt"
     },
@@ -181,7 +187,7 @@
       "uid": "user-volunteer-21",
       "name": "Ethan Katz",
       "email": "ethan.katz@hkvolunteers.org",
-      "phone": "+852 65780639",
+      "phone": "+852 68007786",
       "role": "volunteer",
       "teamId": "team-default-hkt"
     },
@@ -189,7 +195,7 @@
       "uid": "user-volunteer-22",
       "name": "Sarah Stein",
       "email": "sarah.stein@hkvolunteers.org",
-      "phone": "+852 68637687",
+      "phone": "+852 61542593",
       "role": "volunteer",
       "teamId": "team-default-hkt"
     },
@@ -197,7 +203,7 @@
       "uid": "user-volunteer-23",
       "name": "Yee-Man Lee",
       "email": "yeeman.lee@hkvolunteers.org",
-      "phone": "+852 63862801",
+      "phone": "+852 65893385",
       "role": "volunteer",
       "teamId": "team-default-hkt"
     },
@@ -205,7 +211,7 @@
       "uid": "user-volunteer-24",
       "name": "Chaya Roth",
       "email": "chaya.roth@hkvolunteers.org",
-      "phone": "+852 67727240",
+      "phone": "+852 65944297",
       "role": "volunteer",
       "teamId": "team-default-hkt"
     },
@@ -213,7 +219,7 @@
       "uid": "user-volunteer-25",
       "name": "Simcha Kaplan",
       "email": "simcha.kaplan@hkvolunteers.org",
-      "phone": "+852 69607959",
+      "phone": "+852 63799759",
       "role": "volunteer",
       "teamId": "team-default-hkt"
     },
@@ -221,7 +227,7 @@
       "uid": "user-volunteer-26",
       "name": "Wai-Kin Ho",
       "email": "waikin.ho@hkvolunteers.org",
-      "phone": "+852 66004188",
+      "phone": "+852 69051750",
       "role": "volunteer",
       "teamId": "team-default-hkt"
     },
@@ -229,7 +235,7 @@
       "uid": "user-volunteer-27",
       "name": "Adina Shapiro",
       "email": "adina.shapiro@hkvolunteers.org",
-      "phone": "+852 68754286",
+      "phone": "+852 62675422",
       "role": "volunteer",
       "teamId": "team-default-hkt"
     },
@@ -237,7 +243,7 @@
       "uid": "user-volunteer-28",
       "name": "Noam Rosenberg",
       "email": "noam.rosenberg@hkvolunteers.org",
-      "phone": "+852 69997380",
+      "phone": "+852 67167226",
       "role": "volunteer",
       "teamId": "team-default-hkt"
     },
@@ -245,7 +251,7 @@
       "uid": "user-volunteer-29",
       "name": "Lai-Wah Chan",
       "email": "laiwah.chan@hkvolunteers.org",
-      "phone": "+852 64408714",
+      "phone": "+852 66333166",
       "role": "volunteer",
       "teamId": "team-default-hkt"
     },
@@ -253,7 +259,7 @@
       "uid": "user-volunteer-30",
       "name": "Avi Kahn",
       "email": "avi.kahn@hkvolunteers.org",
-      "phone": "+852 64462527",
+      "phone": "+852 68180681",
       "role": "volunteer",
       "teamId": "team-default-hkt"
     },
@@ -261,7 +267,7 @@
       "uid": "user-volunteer-31",
       "name": "Eli Berger",
       "email": "eli.berger@hkvolunteers.org",
-      "phone": "+852 68640854",
+      "phone": "+852 64595148",
       "role": "volunteer",
       "teamId": "team-default-hkt"
     },
@@ -269,7 +275,7 @@
       "uid": "user-volunteer-32",
       "name": "Chun-Yip Cheung",
       "email": "chunyip.cheung@hkvolunteers.org",
-      "phone": "+852 65559977",
+      "phone": "+852 62014538",
       "role": "volunteer",
       "teamId": "team-default-hkt"
     },
@@ -277,7 +283,7 @@
       "uid": "user-volunteer-33",
       "name": "Devorah Rubin",
       "email": "devorah.rubin@hkvolunteers.org",
-      "phone": "+852 61707795",
+      "phone": "+852 65435194",
       "role": "volunteer",
       "teamId": "team-default-hkt"
     },
@@ -285,7 +291,7 @@
       "uid": "user-volunteer-34",
       "name": "Zev Weinberg",
       "email": "zev.weinberg@hkvolunteers.org",
-      "phone": "+852 67611103",
+      "phone": "+852 63569891",
       "role": "volunteer",
       "teamId": "team-default-hkt"
     },
@@ -293,7 +299,7 @@
       "uid": "user-volunteer-35",
       "name": "Ka-Hing Tsang",
       "email": "kahing.tsang@hkvolunteers.org",
-      "phone": "+852 63928697",
+      "phone": "+852 63843334",
       "role": "volunteer",
       "teamId": "team-default-hkt"
     },
@@ -301,7 +307,7 @@
       "uid": "user-volunteer-36",
       "name": "Rachel Katz",
       "email": "rachel.katz@hkvolunteers.org",
-      "phone": "+852 66969150",
+      "phone": "+852 69909354",
       "role": "volunteer",
       "teamId": "team-default-hkt"
     },
@@ -309,7 +315,7 @@
       "uid": "user-volunteer-37",
       "name": "Joshua Stein",
       "email": "joshua.stein@hkvolunteers.org",
-      "phone": "+852 62306724",
+      "phone": "+852 65161535",
       "role": "volunteer",
       "teamId": "team-default-hkt"
     },
@@ -317,7 +323,7 @@
       "uid": "user-volunteer-38",
       "name": "Yee-Man Wong",
       "email": "yeeman.wong@hkvolunteers.org",
-      "phone": "+852 67567166",
+      "phone": "+852 64162966",
       "role": "volunteer",
       "teamId": "team-default-hkt"
     },
@@ -325,7 +331,7 @@
       "uid": "user-volunteer-39",
       "name": "Daniel Roth",
       "email": "daniel.roth@hkvolunteers.org",
-      "phone": "+852 65209752",
+      "phone": "+852 64681849",
       "role": "volunteer",
       "teamId": "team-default-hkt"
     },
@@ -333,7 +339,7 @@
       "uid": "user-volunteer-40",
       "name": "Hannah Kaplan",
       "email": "hannah.kaplan@hkvolunteers.org",
-      "phone": "+852 65905948",
+      "phone": "+852 69070664",
       "role": "volunteer",
       "teamId": "team-default-hkt"
     },
@@ -341,7 +347,7 @@
       "uid": "user-volunteer-41",
       "name": "Wai-Kin Lau",
       "email": "waikin.lau@hkvolunteers.org",
-      "phone": "+852 68577984",
+      "phone": "+852 61669722",
       "role": "volunteer",
       "teamId": "team-default-hkt"
     },
@@ -349,7 +355,7 @@
       "uid": "user-volunteer-42",
       "name": "Esther Shapiro",
       "email": "esther.shapiro@hkvolunteers.org",
-      "phone": "+852 66664385",
+      "phone": "+852 69420886",
       "role": "volunteer",
       "teamId": "team-default-hkt"
     },
@@ -357,7 +363,7 @@
       "uid": "user-volunteer-43",
       "name": "Samuel Rosenberg",
       "email": "samuel.rosenberg@hkvolunteers.org",
-      "phone": "+852 62182305",
+      "phone": "+852 65579111",
       "role": "volunteer",
       "teamId": "team-default-hkt"
     },
@@ -365,7 +371,7 @@
       "uid": "user-volunteer-44",
       "name": "Lai-Wah Li",
       "email": "laiwah.li@hkvolunteers.org",
-      "phone": "+852 63617622",
+      "phone": "+852 68879839",
       "role": "volunteer",
       "teamId": "team-default-hkt"
     },
@@ -373,7 +379,7 @@
       "uid": "user-volunteer-45",
       "name": "Jacob Kahn",
       "email": "jacob.kahn@hkvolunteers.org",
-      "phone": "+852 61993006",
+      "phone": "+852 65024009",
       "role": "volunteer",
       "teamId": "team-default-hkt"
     },
@@ -381,7 +387,7 @@
       "uid": "user-volunteer-46",
       "name": "Leah Berger",
       "email": "leah.berger@hkvolunteers.org",
-      "phone": "+852 65514201",
+      "phone": "+852 68785569",
       "role": "volunteer",
       "teamId": "team-default-hkt"
     },
@@ -389,7 +395,7 @@
       "uid": "user-volunteer-47",
       "name": "Chun-Yip Lee",
       "email": "chunyip.lee@hkvolunteers.org",
-      "phone": "+852 66642061",
+      "phone": "+852 67635615",
       "role": "volunteer",
       "teamId": "team-default-hkt"
     },
@@ -397,7 +403,7 @@
       "uid": "user-volunteer-48",
       "name": "Ruth Rubin",
       "email": "ruth.rubin@hkvolunteers.org",
-      "phone": "+852 63646584",
+      "phone": "+852 67477284",
       "role": "volunteer",
       "teamId": "team-default-hkt"
     },
@@ -405,7 +411,7 @@
       "uid": "user-volunteer-49",
       "name": "Isaac Weinberg",
       "email": "isaac.weinberg@hkvolunteers.org",
-      "phone": "+852 62235549",
+      "phone": "+852 66270103",
       "role": "volunteer",
       "teamId": "team-default-hkt"
     }
@@ -417,7 +423,7 @@
       "startTime": "18:14",
       "endTime": "19:44",
       "type": "Friday",
-      "assignedUserId": "user-volunteer-10",
+      "assignedUserId": "user-volunteer-7",
       "status": "assigned"
     },
     {
@@ -426,7 +432,7 @@
       "startTime": "09:00",
       "endTime": "13:00",
       "type": "Saturday",
-      "assignedUserId": "user-volunteer-27",
+      "assignedUserId": "user-volunteer-42",
       "status": "assigned"
     },
     {
@@ -435,16 +441,16 @@
       "startTime": "18:21",
       "endTime": "19:51",
       "type": "Friday",
-      "assignedUserId": "user-volunteer-44",
+      "assignedUserId": "user-volunteer-40",
       "status": "assigned"
     },
     {
       "shiftId": "shift-sat-2026-06-06",
       "date": "2026-06-06",
-      "startTime": "09:00",
+      "startTime": "999999999999",
       "endTime": "13:00",
       "type": "Saturday",
-      "assignedUserId": "user-volunteer-34",
+      "assignedUserId": "user-volunteer-9",
       "status": "assigned"
     },
     {
@@ -453,7 +459,7 @@
       "startTime": "18:22",
       "endTime": "19:52",
       "type": "Friday",
-      "assignedUserId": "user-volunteer-49",
+      "assignedUserId": "user-volunteer-5",
       "status": "assigned"
     },
     {
@@ -462,7 +468,7 @@
       "startTime": "09:00",
       "endTime": "13:00",
       "type": "Saturday",
-      "assignedUserId": "user-volunteer-30",
+      "assignedUserId": "user-volunteer-39",
       "status": "assigned"
     },
     {
@@ -471,7 +477,7 @@
       "startTime": "18:23",
       "endTime": "19:53",
       "type": "Friday",
-      "assignedUserId": "user-volunteer-23",
+      "assignedUserId": "user-volunteer-27",
       "status": "assigned"
     },
     {
@@ -480,7 +486,7 @@
       "startTime": "09:00",
       "endTime": "13:00",
       "type": "Saturday",
-      "assignedUserId": "user-volunteer-34",
+      "assignedUserId": "user-volunteer-17",
       "status": "assigned"
     },
     {
@@ -489,7 +495,7 @@
       "startTime": "18:23",
       "endTime": "19:53",
       "type": "Friday",
-      "assignedUserId": "user-volunteer-26",
+      "assignedUserId": "user-volunteer-25",
       "status": "assigned"
     },
     {
@@ -498,7 +504,7 @@
       "startTime": "09:00",
       "endTime": "13:00",
       "type": "Saturday",
-      "assignedUserId": "user-volunteer-35",
+      "assignedUserId": "user-volunteer-20",
       "status": "assigned"
     },
     {
@@ -507,7 +513,7 @@
       "startTime": "18:22",
       "endTime": "19:52",
       "type": "Friday",
-      "assignedUserId": "user-volunteer-11",
+      "assignedUserId": "user-volunteer-43",
       "status": "assigned"
     },
     {
@@ -516,7 +522,7 @@
       "startTime": "09:00",
       "endTime": "13:00",
       "type": "Saturday",
-      "assignedUserId": "user-volunteer-23",
+      "assignedUserId": "user-volunteer-47",
       "status": "assigned"
     },
     {
@@ -525,7 +531,7 @@
       "startTime": "18:20",
       "endTime": "19:50",
       "type": "Friday",
-      "assignedUserId": "user-volunteer-47",
+      "assignedUserId": "user-volunteer-19",
       "status": "assigned"
     },
     {
@@ -534,7 +540,7 @@
       "startTime": "09:00",
       "endTime": "13:00",
       "type": "Saturday",
-      "assignedUserId": "user-volunteer-26",
+      "assignedUserId": "user-volunteer-33",
       "status": "assigned"
     },
     {
@@ -543,7 +549,7 @@
       "startTime": "18:18",
       "endTime": "19:48",
       "type": "Friday",
-      "assignedUserId": "user-volunteer-7",
+      "assignedUserId": "user-volunteer-45",
       "status": "assigned"
     },
     {
@@ -552,7 +558,7 @@
       "startTime": "09:00",
       "endTime": "13:00",
       "type": "Saturday",
-      "assignedUserId": "user-volunteer-10",
+      "assignedUserId": "user-volunteer-6",
       "status": "assigned"
     },
     {
@@ -561,8 +567,8 @@
       "startTime": "18:15",
       "endTime": "19:45",
       "type": "Friday",
-      "assignedUserId": "user-volunteer-11",
-      "status": "assigned"
+      "assignedUserId": null,
+      "status": "vacant"
     },
     {
       "shiftId": "shift-sat-2026-07-25",
@@ -570,7 +576,7 @@
       "startTime": "09:00",
       "endTime": "13:00",
       "type": "Saturday",
-      "assignedUserId": "user-volunteer-31",
+      "assignedUserId": "user-volunteer-16",
       "status": "assigned"
     },
     {
@@ -579,7 +585,7 @@
       "startTime": "18:12",
       "endTime": "19:42",
       "type": "Friday",
-      "assignedUserId": "user-volunteer-48",
+      "assignedUserId": "user-volunteer-15",
       "status": "assigned"
     },
     {
@@ -588,7 +594,7 @@
       "startTime": "09:00",
       "endTime": "13:00",
       "type": "Saturday",
-      "assignedUserId": "user-volunteer-42",
+      "assignedUserId": "user-volunteer-8",
       "status": "assigned"
     },
     {
@@ -597,7 +603,7 @@
       "startTime": "18:08",
       "endTime": "19:38",
       "type": "Friday",
-      "assignedUserId": "user-volunteer-45",
+      "assignedUserId": "user-volunteer-10",
       "status": "assigned"
     },
     {
@@ -606,7 +612,7 @@
       "startTime": "09:00",
       "endTime": "13:00",
       "type": "Saturday",
-      "assignedUserId": "user-volunteer-23",
+      "assignedUserId": "user-volunteer-41",
       "status": "assigned"
     },
     {
@@ -615,7 +621,7 @@
       "startTime": "18:04",
       "endTime": "19:34",
       "type": "Friday",
-      "assignedUserId": "user-volunteer-16",
+      "assignedUserId": "user-volunteer-11",
       "status": "assigned"
     },
     {
@@ -624,8 +630,8 @@
       "startTime": "09:00",
       "endTime": "13:00",
       "type": "Saturday",
-      "assignedUserId": "user-volunteer-41",
-      "status": "assigned"
+      "assignedUserId": "user-volunteer-5",
+      "status": "pending_exchange"
     },
     {
       "shiftId": "shift-fri-2026-08-21",
@@ -633,7 +639,7 @@
       "startTime": "18:00",
       "endTime": "19:30",
       "type": "Friday",
-      "assignedUserId": "user-volunteer-34",
+      "assignedUserId": "user-volunteer-46",
       "status": "assigned"
     },
     {
@@ -642,20 +648,100 @@
       "startTime": "09:00",
       "endTime": "13:00",
       "type": "Saturday",
-      "assignedUserId": "user-volunteer-21",
+      "assignedUserId": "user-volunteer-32",
       "status": "assigned"
     }
   ],
   "logs": [
     {
-      "id": "log-init-1779973673864",
-      "timestamp": "2026-05-28T13:07:53.864Z",
+      "id": "log-team-1779986549838",
+      "timestamp": "2026-05-28T16:42:29.838Z",
+      "type": "system",
+      "message": "Created new team: Brazil JCC"
+    },
+    {
+      "id": "system-mut-1779877584338",
+      "timestamp": "2026-05-27T10:26:24.338Z",
+      "type": "system",
+      "message": "Firestore Mutation: Modified [Saturday] Shift on 2026-06-06. Assigned user is now Daniel Roth."
+    },
+    {
+      "id": "system-mut-1779877542574",
+      "timestamp": "2026-05-27T10:25:42.574Z",
+      "type": "system",
+      "message": "Firestore Mutation: Modified [Friday] Shift on 2026-06-12. Assigned user is now Ka-Hing Chan."
+    },
+    {
+      "id": "email-1779877542574-1",
+      "timestamp": "2026-05-27T10:25:42.574Z",
+      "type": "email",
+      "message": "RFC-5545 Calendar Invitation (.ics) emailed to kahing.chan@hkvolunteers.org",
+      "details": {
+        "to": "kahing.chan@hkvolunteers.org",
+        "subject": "ACTION REQUIRED: Calendar Invite - Shabbat Shift [2026-06-12]",
+        "icsContent": "BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nSUMMARY:Shabbat Shift (Friday)\nDTSTART:20260612T182200\nDTEND:20260612T195200\nEND:VEVENT\nEND:VCALENDAR"
+      }
+    },
+    {
+      "id": "fcm-1779877542574-1",
+      "timestamp": "2026-05-27T10:25:42.574Z",
+      "type": "fcm",
+      "message": "FCM Alert: You have been assigned to Friday shift on 2026-06-12.",
+      "details": {
+        "targetUid": "user-volunteer-5",
+        "token": "fcm_token_registered_hkt_user-volunteer-5"
+      }
+    },
+    {
+      "id": "system-claim-1779877425839",
+      "timestamp": "2026-05-27T10:23:45.839Z",
+      "type": "system",
+      "message": "Volunteer shift claimed on Firestore by Daniel Roth. Status updated to: assigned."
+    },
+    {
+      "id": "email-1779877425839-claim",
+      "timestamp": "2026-05-27T10:23:45.839Z",
+      "type": "email",
+      "message": "RFC-5545 Calendar Invitation (.ics) emailed to daniel.roth@hkvolunteers.org (Assigned via claim)",
+      "details": {
+        "to": "daniel.roth@hkvolunteers.org",
+        "subject": "Calendar Confirmation - Shabbat Shift [2026-06-06]"
+      }
+    },
+    {
+      "id": "fcm-1779877425839-claim",
+      "timestamp": "2026-05-27T10:23:45.839Z",
+      "type": "fcm",
+      "message": "FCM Confirmation: Successfully claimed Shabbat Saturday shift on 2026-06-06!",
+      "details": {
+        "targetUid": "user-volunteer-9"
+      }
+    },
+    {
+      "id": "system-ex-1779877293132",
+      "timestamp": "2026-05-27T10:21:33.132Z",
+      "type": "system",
+      "message": "Shift status mutated to \"pending_exchange\" for Friday/Saturday shift on 2026-08-15. Team notification dispatched."
+    },
+    {
+      "id": "fcm-exchange-1779877293132",
+      "timestamp": "2026-05-27T10:21:33.132Z",
+      "type": "fcm",
+      "message": "FCM Group Broadcast: Ka-Hing Chan requested an exchange for Saturday Shift on 2026-08-15. Claim it now!",
+      "details": {
+        "broadcastGroup": "team-default-hkt",
+        "targetTeam": "team-default-hkt"
+      }
+    },
+    {
+      "id": "log-init-1779873961767",
+      "timestamp": "2026-05-27T09:26:01.767Z",
       "type": "system",
       "message": "System initialized. Generated 50 team members including Super Admins, Admins, and Volunteers in Hong Kong Shabbat Community team."
     },
     {
-      "id": "log-shifts-gen-1779973674604",
-      "timestamp": "2026-05-28T13:07:54.604Z",
+      "id": "log-shifts-gen-1779873962484",
+      "timestamp": "2026-05-27T09:26:02.484Z",
       "type": "system",
       "message": "HKT Shabbat schedules generated with rolling 3-month horizon (26 shifts total)."
     }
