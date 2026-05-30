@@ -65,15 +65,34 @@ class _LoginPageState extends State<LoginPage> {
   Future<void> _loadUsers() async {
     try {
       const String baseUrl = 'http://10.0.2.2:3000';
-      final response = await http.get(Uri.parse('$baseUrl/api/users'));
+      debugPrint('Fetching users from $baseUrl/api/users...');
+      
+      final response = await http.get(Uri.parse('$baseUrl/api/users')).timeout(
+        const Duration(seconds: 5),
+        onTimeout: () {
+          debugPrint('API request timed out after 5 seconds');
+          throw Exception('Server not responding - is the backend running on port 3000?');
+        },
+      );
 
       if (response.statusCode == 200) {
+        final users = json.decode(response.body);
+        debugPrint('Successfully loaded ${users.length} users');
         setState(() {
-          _users = json.decode(response.body);
+          _users = users;
+          _errorMessage = null;
+        });
+      } else {
+        debugPrint('Failed to load users: Status ${response.statusCode}');
+        setState(() {
+          _errorMessage = 'API Error: ${response.statusCode}';
         });
       }
     } catch (e) {
       debugPrint('Error loading users: $e');
+      setState(() {
+        _errorMessage = 'Error: ${e.toString()}';
+      });
     }
   }
 
@@ -90,12 +109,16 @@ class _LoginPageState extends State<LoginPage> {
 
     await Future.delayed(const Duration(milliseconds: 500));
 
+    debugPrint('Attempting login with: ${_emailController.text}');
+    debugPrint('Available users: ${_users.length}');
+
     final user = _users.firstWhere(
-      (u) => u['email'] == _emailController.text,
+      (u) => (u['email'] ?? '').toString().toLowerCase() == _emailController.text.toLowerCase(),
       orElse: () => null,
     );
 
     if (user == null) {
+      debugPrint('User not found in list');
       setState(() {
         _errorMessage = 'User not found. Try: dashinker@gmail.com';
         _isLoading = false;
@@ -103,6 +126,7 @@ class _LoginPageState extends State<LoginPage> {
       return;
     }
 
+    debugPrint('Login successful for: ${user['name']}');
     widget.onLoginSuccess(user);
   }
 
@@ -111,6 +135,84 @@ class _LoginPageState extends State<LoginPage> {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  List<Widget> _buildDemoUsersList() {
+    // Filter users by role
+    final superadmins = _users.where((u) => u['role'] == 'superadmin').toList();
+    final admins = _users.where((u) => u['role'] == 'admin').toList();
+    final volunteers = _users.where((u) => u['role'] == 'volunteer').toList();
+
+    // Combine: 1 superadmin + 1 admin + 5 volunteers
+    final demoUsers = [
+      ...superadmins.take(1),
+      ...admins.take(1),
+      ...volunteers.take(5),
+    ];
+
+    return demoUsers.map((user) {
+      final role = user['role'] ?? 'volunteer';
+      Color roleColor;
+      switch (role) {
+        case 'superadmin':
+          roleColor = Colors.red;
+          break;
+        case 'admin':
+          roleColor = Colors.purple;
+          break;
+        default:
+          roleColor = Colors.blue;
+      }
+
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        user['email'] ?? 'No email',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      Text(
+                        user['name'] ?? 'No name',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: roleColor.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    role.toUpperCase(),
+                    style: TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.bold,
+                      color: roleColor,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    }).toList();
   }
 
   @override
@@ -171,22 +273,9 @@ class _LoginPageState extends State<LoginPage> {
                   keyboardType: TextInputType.emailAddress,
                   onSubmitted: (_) => _login(),
                 ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: _passwordController,
-                  decoration: InputDecoration(
-                    labelText: 'Password',
-                    prefixIcon: const Icon(Icons.lock),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  obscureText: true,
-                  onSubmitted: (_) => _login(),
-                ),
                 const SizedBox(height: 8),
                 Text(
-                  'Demo: Use any email from the list, password can be anything',
+                  'Demo: Use any email from the list below',
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.grey.shade600,
@@ -227,33 +316,36 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       const SizedBox(height: 12),
                       if (_users.isEmpty)
-                        Text(
-                          'Loading users...',
-                          style: TextStyle(color: Colors.grey.shade600),
-                        )
-                      else
-                        ..._users.take(5).map((user) => Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              if (_errorMessage != null)
+                                Text(
+                                  'Error loading users:',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.red.shade600,
+                                  ),
+                                )
+                              else
+                                const SizedBox.shrink(),
+                              if (_errorMessage != null)
+                                const SizedBox(height: 4),
                               Text(
-                                user['email'],
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              Text(
-                                user['name'],
+                                _errorMessage ?? 'Loading users...',
                                 style: TextStyle(
-                                  fontSize: 11,
-                                  color: Colors.grey.shade600,
+                                  fontSize: 12,
+                                  color: _errorMessage != null ? Colors.red.shade600 : Colors.grey.shade600,
                                 ),
                               ),
                             ],
                           ),
-                        )),
+                        )
+                      else
+                        ..._buildDemoUsersList(),
                     ],
                   ),
                 ),
